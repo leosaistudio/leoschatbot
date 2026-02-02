@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
 import { MessageSquare, Bot, Clock } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminConversationsPage() {
     const conversations = await prisma.conversation.findMany({
         orderBy: { startedAt: 'desc' },
@@ -66,7 +68,7 @@ export default async function AdminConversationsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                            {conversations.map((conv) => (
+                            {conversations.map((conv: any) => (
                                 <tr key={conv.id} className="hover:bg-slate-700/50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
@@ -82,8 +84,8 @@ export default async function AdminConversationsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${conv.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                                                conv.status === 'human_takeover' ? 'bg-blue-500/20 text-blue-400' :
-                                                    'bg-slate-600 text-slate-400'
+                                            conv.status === 'human_takeover' ? 'bg-blue-500/20 text-blue-400' :
+                                                'bg-slate-600 text-slate-400'
                                             }`}>
                                             {conv.status === 'active' ? 'פעיל' :
                                                 conv.status === 'human_takeover' ? 'אנושי' : 'סגור'}

@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { CreditCard, Users, TrendingUp, Plus } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminCreditsPage() {
     // Get all users with their credit info
     const users = await prisma.user.findMany({
@@ -75,7 +77,7 @@ export default async function AdminCreditsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                            {users.map((user) => (
+                            {users.map((user: any) => (
                                 <tr key={user.id} className="hover:bg-slate-700/50 transition">
                                     <td className="px-6 py-4">
                                         <div>

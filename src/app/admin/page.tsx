@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { Users, Bot, MessageSquare, CreditCard, TrendingUp, TrendingDown, DollarSign, AlertTriangle, UserX, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
     // Get all stats
     const [
@@ -141,7 +143,7 @@ export default async function AdminDashboard() {
                 <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
                     <h3 className="text-lg font-semibold text-white mb-4">משתמשים אחרונים</h3>
                     <div className="space-y-3">
-                        {recentUsers.map((user) => (
+                        {recentUsers.map((user: any) => (
                             <div
                                 key={user.id}
                                 className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"

@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
-import { Bot, Search, Users, MessageSquare } from 'lucide-react'
+import { MessageSquare, Bot, Clock } from 'lucide-react'
 import Link from 'next/link'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminBotsPage() {
     const bots = await prisma.bot.findMany({
@@ -38,7 +40,7 @@ export default async function AdminBotsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                            {bots.map((bot) => (
+                            {bots.map((bot: any) => (
                                 <tr key={bot.id} className="hover:bg-slate-700/50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
@@ -59,9 +61,9 @@ export default async function AdminBotsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${bot.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                                                bot.status === 'training' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    bot.status === 'paused' ? 'bg-red-500/20 text-red-400' :
-                                                        'bg-slate-600 text-slate-400'
+                                            bot.status === 'training' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                bot.status === 'paused' ? 'bg-red-500/20 text-red-400' :
+                                                    'bg-slate-600 text-slate-400'
                                             }`}>
                                             {bot.status === 'active' ? 'פעיל' :
                                                 bot.status === 'training' ? 'באימון' :

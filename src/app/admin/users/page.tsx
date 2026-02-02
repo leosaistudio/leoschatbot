@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import { Users, Search, MoreVertical, Bot, CreditCard, Ban, CheckCircle } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminUsersPage() {
     const users = await prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
@@ -38,7 +40,7 @@ export default async function AdminUsersPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                            {users.map((user) => (
+                            {users.map((user: any) => (
                                 <tr key={user.id} className="hover:bg-slate-700/50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
@@ -53,8 +55,8 @@ export default async function AdminUsersPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${user.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                                                user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-red-500/20 text-red-400'
+                                            user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-red-500/20 text-red-400'
                                             }`}>
                                             {user.status === 'active' ? <CheckCircle size={12} /> : <Ban size={12} />}
                                             {user.status === 'active' ? 'פעיל' :

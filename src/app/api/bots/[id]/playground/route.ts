@@ -129,7 +129,7 @@ async function searchRelevantContentWithDetails(
     }
 
     // Calculate similarities
-    const results = embeddings.map(emb => {
+    const similarities = embeddings.map(emb => {
         const embVector = emb.embedding as number[]
         const similarity = cosineSimilarity(queryEmbedding, embVector)
         return {
@@ -141,8 +141,8 @@ async function searchRelevantContentWithDetails(
     })
 
     // Sort by similarity and take top results
-    return results
-        .sort((a, b) => b.similarity - a.similarity)
+    const sortedResults = similarities.sort((a, b) => b.similarity - a.similarity)
+    return sortedResults
         .slice(0, limit)
         .filter(r => r.similarity > 0.3) // Only return if similarity is decent
 }

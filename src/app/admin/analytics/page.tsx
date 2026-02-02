@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
 import { BarChart3, Users, Bot, MessageSquare, CreditCard, TrendingUp } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminAnalyticsPage() {
     // Get stats
     const [
