@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateEmbedding } from '@/services/embeddings'
-import OpenAI from 'openai'
+import { openai } from '@/lib/openai'
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-})
 
 interface RouteParams {
     params: Promise<{ id: string }>
