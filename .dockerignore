@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+*.md
+deploy.zip
+prisma/dev.db
+.env
+.env.*
+!.env.production.example

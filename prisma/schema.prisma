@@ -1,12 +1,13 @@
 // Prisma schema for AI Chatbot SaaS Platform
-// Database: SQLite (dev) / MySQL (production)
+// Database: MySQL (production)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -53,7 +54,7 @@ model CreditHistory {
   userId      String   @map("user_id")
   amount      Int      // positive = added, negative = used
   type        String   // 'purchase', 'usage', 'bonus'
-  description String?
+  description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -67,12 +68,12 @@ model Bot {
   id              String   @id @default(cuid())
   userId          String   @map("user_id")
   name            String
-  description     String?
+  description     String?  @db.Text
   status          String   @default("draft") // 'draft', 'training', 'active', 'paused'
   
   // AI Settings
-  systemPrompt    String?  @map("system_prompt")
-  welcomeMessage  String?  @map("welcome_message")
+  systemPrompt    String?  @map("system_prompt") @db.Text
+  welcomeMessage  String?  @map("welcome_message") @db.Text
   temperature     Float    @default(0.7)
   
   // Appearance Settings
@@ -94,7 +95,7 @@ model Bot {
   businessHoursEnd     String  @default("18:00") @map("business_hours_end")   // End time HH:MM
   workingDays          Json?   @map("working_days") // Array of days [0-6] where 0=Sunday
   shabbatModeEnabled   Boolean @default(false) @map("shabbat_mode_enabled") // Pause during Shabbat
-  offlineMessage       String? @map("offline_message") // Message when bot is offline
+  offlineMessage       String? @map("offline_message") @db.Text
   
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -117,9 +118,9 @@ model TrainingSource {
   id        String   @id @default(cuid())
   botId     String   @map("bot_id")
   type      String   // 'url', 'text', 'file'
-  content   String   // URL or text content
+  content   String   @db.LongText // URL or text content
   status    String   @default("pending") // 'pending', 'processing', 'completed', 'failed'
-  error     String?
+  error     String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   
@@ -133,7 +134,7 @@ model Embedding {
   id        String   @id @default(cuid())
   botId     String   @map("bot_id")
   sourceId  String   @map("source_id")
-  content   String   // Original text chunk
+  content   String   @db.LongText // Original text chunk
   embedding Json     // Vector stored as JSON array
   createdAt DateTime @default(now()) @map("created_at")
   
@@ -153,8 +154,8 @@ model Conversation {
   status      String   @default("active") // 'active', 'closed', 'human_takeover'
   visitorName String?  @map("visitor_name")
   visitorEmail String? @map("visitor_email")
-  pageUrl     String?  @map("page_url") // Where the chat started
-  summary     String?  // AI generated summary
+  pageUrl     String?  @map("page_url")
+  summary     String?  @db.Text // AI generated summary
   sentiment   String?  // positive, negative, neutral
   tokensUsed  Int      @default(0) @map("tokens_used") // Total OpenAI tokens used (for admin)
   creditsUsed Int      @default(0) @map("credits_used") // Number of queries/responses (for users)
@@ -172,7 +173,7 @@ model Message {
   id             String   @id @default(cuid())
   conversationId String   @map("conversation_id")
   role           String   // 'user', 'assistant', 'system', 'human'
-  content        String
+  content        String   @db.LongText
   createdAt      DateTime @default(now()) @map("created_at")
   
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -209,9 +210,9 @@ model SitemapCrawl {
   totalUrls      Int      @default(0) @map("total_urls")
   processedUrls  Int      @default(0) @map("processed_urls")
   failedUrls     Int      @default(0) @map("failed_urls")
-  urls           Json     @default("[]") // Array of URLs to crawl
+  urls           Json     // Array of URLs to crawl
   currentIndex   Int      @default(0) @map("current_index")
-  error          String?
+  error          String?  @db.Text
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   
@@ -232,11 +233,11 @@ model ProductImage {
   currency      String?  @default("ILS")
   imageUrl      String   @map("image_url")
   pageUrl       String   @map("page_url")
-  description   String?
+  description   String?  @db.Text
   brand         String?
   category      String?
   inStock       Boolean  @default(true) @map("in_stock")
-  embedding     Json     @default("[]") // CLIP image embedding vector
+  embedding     Json     // CLIP image embedding vector
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   
@@ -251,7 +252,7 @@ model ProductImage {
 model AdminBroadcast {
   id            String   @id @default(cuid())
   title         String
-  content       String
+  content       String   @db.Text
   type          String   @default("info") // 'info', 'warning', 'update'
   targetUserId  String?  @map("target_user_id") // null = all users, userId = specific user
   isActive      Boolean  @default(true) @map("is_active")
@@ -281,8 +282,8 @@ model PricingPlan {
   name            String   // 'Essential', 'Business', 'Premium'
   nameHe          String   @map("name_he") // Hebrew name
   slug            String   @unique // 'essential', 'business', 'premium'
-  description     String?  // Short description
-  descriptionHe   String?  @map("description_he") // Hebrew description
+  description     String?  @db.Text // Short description
+  descriptionHe   String?  @map("description_he") @db.Text // Hebrew description
   price           Float    // Monthly price in ILS
   yearlyPrice     Float?   @map("yearly_price") // Yearly price in ILS (optional)
   isPopular       Boolean  @default(false) @map("is_popular")
@@ -298,8 +299,8 @@ model PricingPlan {
   maxTeamMembers  Int      @default(1) @map("max_team_members")
   
   // Features (stored as JSON array of strings)
-  features        Json     @default("[]") // Array of feature strings
-  featuresHe      Json     @default("[]") @map("features_he") // Hebrew features
+  features        Json     // Array of feature strings
+  featuresHe      Json     @map("features_he") // Hebrew features
   
   // Feature flags
   hasLiveChat     Boolean  @default(false) @map("has_live_chat")
@@ -336,8 +337,8 @@ model Payment {
   
   // Metadata
   orderId         String   @unique @map("order_id")
-  description     String?
-  errorMessage    String?  @map("error_message")
+  description     String?  @db.Text
+  errorMessage    String?  @map("error_message") @db.Text
   
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -374,5 +375,3 @@ model Subscription {
   
   @@map("subscriptions")
 }
-
-
