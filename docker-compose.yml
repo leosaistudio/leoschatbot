@@ -44,7 +44,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - default
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatbot.rule=Host(`92.113.26.3`) && PathPrefix(`/`)"
+      - "traefik.http.routers.chatbot.entrypoints=web"
+      - "traefik.http.services.chatbot.loadbalancer.server.port=3000"
+      - "traefik.http.routers.chatbot.priority=1"
 
 volumes:
   mysql_data:
   uploads_data:
+
+networks:
+  traefik_network:
+    external: true
+    name: n8n_default
