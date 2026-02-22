@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateEmbedding } from '@/services/embeddings'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from '@/lib/openai'
 
 interface RouteParams {
     params: Promise<{ id: string }>
@@ -78,7 +74,7 @@ ${context || 'אין מידע ספציפי זמין.'}
 פסקה סיכום.`
 
         // Call OpenAI
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 { role: 'system', content: fullSystemPrompt },

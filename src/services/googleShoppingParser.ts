@@ -78,7 +78,7 @@ function extractTag(xml: string, tagName: string): string {
  */
 export async function generateImageDescription(imageUrl: string): Promise<string> {
     try {
-        const response = await openai.chat.completions.create({
+        const response = await openai().chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 {

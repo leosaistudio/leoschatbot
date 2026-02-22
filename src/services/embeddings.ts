@@ -30,7 +30,7 @@ export function chunkText(text: string): string[] {
  * Generate embedding for a text using OpenAI
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-    const response = await openai.embeddings.create({
+    const response = await openai().embeddings.create({
         model: EMBEDDING_MODEL,
         input: text,
     })

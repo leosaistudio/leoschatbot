@@ -10,7 +10,7 @@ export async function generateImageEmbedding(imageUrl: string): Promise<number[]
         const description = await describeImage(imageUrl)
 
         // Then, generate text embedding of the description
-        const embedding = await openai.embeddings.create({
+        const embedding = await openai().embeddings.create({
             model: 'text-embedding-3-small',
             input: description,
         })
@@ -26,7 +26,7 @@ export async function generateImageEmbedding(imageUrl: string): Promise<number[]
  * Describe an image using Vision API
  */
 async function describeImage(imageUrl: string): Promise<string> {
-    const response = await openai.chat.completions.create({
+    const response = await openai().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
             {
@@ -62,7 +62,7 @@ async function describeImage(imageUrl: string): Promise<string> {
  * Enhanced to identify multiple items when present
  */
 export async function describeUploadedImage(imageData: string): Promise<string> {
-    const response = await openai.chat.completions.create({
+    const response = await openai().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
             {
@@ -105,7 +105,7 @@ export async function generateUploadedImageEmbedding(imageData: string): Promise
     const description = await describeUploadedImage(imageData)
     console.log('📝 Uploaded image description:', description.slice(0, 100) + '...')
 
-    const embedding = await openai.embeddings.create({
+    const embedding = await openai().embeddings.create({
         model: 'text-embedding-3-small',
         input: description,
     })

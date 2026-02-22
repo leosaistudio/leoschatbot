@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import openai from '@/lib/openai'
+import { getOpenAI } from '@/lib/openai'
 
 interface RouteParams {
     params: Promise<{ id: string }>
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .join('\n')
 
     try {
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 {

@@ -106,7 +106,7 @@ export async function searchProductsByText(
 }>> {
     try {
         // Generate embedding for the text query
-        const embeddingResponse = await openai.embeddings.create({
+        const embeddingResponse = await openai().embeddings.create({
             model: 'text-embedding-3-small',
             input: query,
         })
@@ -216,7 +216,7 @@ export async function generateImageEmbeddingForQdrant(
     const description = await describeImageForQdrant(imageUrl, productName)
 
     // Generate text embedding
-    const embeddingResponse = await openai.embeddings.create({
+    const embeddingResponse = await openai().embeddings.create({
         model: 'text-embedding-3-small',
         input: `${productName}. ${description}`,
     })
@@ -229,7 +229,7 @@ export async function generateImageEmbeddingForQdrant(
  */
 async function describeImageForQdrant(imageUrl: string, productName: string): Promise<string> {
     try {
-        const response = await openai.chat.completions.create({
+        const response = await openai().chat.completions.create({
             model: 'gpt-4.1',
             messages: [
                 {
@@ -273,7 +273,7 @@ export async function generateUploadedImageEmbeddingForQdrant(imageData: string)
     console.log('📝 Qdrant: Uploaded image description:', description.slice(0, 80) + '...')
 
     // Generate text embedding
-    const embeddingResponse = await openai.embeddings.create({
+    const embeddingResponse = await openai().embeddings.create({
         model: 'text-embedding-3-small',
         input: description,
     })
@@ -285,7 +285,7 @@ export async function generateUploadedImageEmbeddingForQdrant(imageData: string)
  * Describe uploaded image for search
  */
 async function describeUploadedImageForQdrant(imageData: string): Promise<string> {
-    const response = await openai.chat.completions.create({
+    const response = await openai().chat.completions.create({
         model: 'gpt-4.1',
         messages: [
             {
