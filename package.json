@@ -16,7 +16,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "6.5.0",
     "@qdrant/js-client-rest": "^1.16.2",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0",
@@ -41,7 +41,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "prisma": "^6.5.0",
+    "prisma": "6.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
