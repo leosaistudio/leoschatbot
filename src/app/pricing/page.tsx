@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import { Check, Star, Award } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PricingPage() {
     const plans = await prisma.pricingPlan.findMany({
         where: { isActive: true },
@@ -51,10 +53,10 @@ export default async function PricingPage() {
                         <div
                             key={plan.id}
                             className={`relative bg-slate-800/50 backdrop-blur-sm rounded-2xl border-2 p-8 transition-all hover:scale-105 ${plan.isPopular
-                                    ? 'border-purple-500 shadow-xl shadow-purple-500/20'
-                                    : plan.isBestValue
-                                        ? 'border-green-500 shadow-xl shadow-green-500/20'
-                                        : 'border-slate-700 hover:border-slate-500'
+                                ? 'border-purple-500 shadow-xl shadow-purple-500/20'
+                                : plan.isBestValue
+                                    ? 'border-green-500 shadow-xl shadow-green-500/20'
+                                    : 'border-slate-700 hover:border-slate-500'
                                 }`}
                         >
                             {/* Badge */}
@@ -151,10 +153,10 @@ export default async function PricingPage() {
                             <Link
                                 href={`/register?plan=${plan.slug}`}
                                 className={`block w-full py-4 text-center rounded-xl font-semibold transition ${plan.isPopular
-                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                        : plan.isBestValue
-                                            ? 'bg-green-600 hover:bg-green-700 text-white'
-                                            : 'bg-slate-700 hover:bg-slate-600 text-white'
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                    : plan.isBestValue
+                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                        : 'bg-slate-700 hover:bg-slate-600 text-white'
                                     }`}
                             >
                                 בחר ב{plan.nameHe}

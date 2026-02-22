@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { Users, Bot, MessageSquare, CreditCard, TrendingUp, TrendingDown, DollarSign, AlertTriangle, UserX, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
     // Get all stats
     const [
