@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, Save, RotateCcw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Sparkles, Save, RotateCcw, Check, X } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
@@ -10,20 +10,59 @@ export default function BotAIPage() {
     const [systemPrompt, setSystemPrompt] = useState('')
     const [temperature, setTemperature] = useState(0.7)
     const [saving, setSaving] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+    // Load existing bot data
+    useEffect(() => {
+        const loadBot = async () => {
+            try {
+                const res = await fetch(`/api/bots/${params.id}`)
+                if (res.ok) {
+                    const bot = await res.json()
+                    if (bot.systemPrompt) setSystemPrompt(bot.systemPrompt)
+                    if (bot.temperature !== undefined && bot.temperature !== null) setTemperature(bot.temperature)
+                }
+            } catch (error) {
+                console.error('Error loading bot:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadBot()
+    }, [params.id])
 
     const handleSave = async () => {
         setSaving(true)
+        setSaveStatus('idle')
         try {
-            await fetch(`/api/bots/${params.id}`, {
+            const res = await fetch(`/api/bots/${params.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ systemPrompt, temperature }),
             })
+            if (res.ok) {
+                setSaveStatus('success')
+                setTimeout(() => setSaveStatus('idle'), 3000)
+            } else {
+                setSaveStatus('error')
+                setTimeout(() => setSaveStatus('idle'), 3000)
+            }
         } catch (error) {
             console.error('Error saving:', error)
+            setSaveStatus('error')
+            setTimeout(() => setSaveStatus('idle'), 3000)
         } finally {
             setSaving(false)
         }
+    }
+
+    if (loading) {
+        return (
+            <div className="max-w-4xl mx-auto flex items-center justify-center py-20">
+                <div className="text-slate-500">טוען...</div>
+            </div>
+        )
     }
 
     return (
@@ -88,10 +127,20 @@ export default function BotAIPage() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition disabled:opacity-50"
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition disabled:opacity-50 ${saveStatus === 'success'
+                                ? 'bg-green-600 text-white'
+                                : saveStatus === 'error'
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                            }`}
                     >
-                        <Save size={18} />
-                        {saving ? 'שומר...' : 'שמור שינויים'}
+                        {saveStatus === 'success' ? (
+                            <><Check size={18} /> נשמר בהצלחה!</>
+                        ) : saveStatus === 'error' ? (
+                            <><X size={18} /> שגיאה בשמירה</>
+                        ) : (
+                            <><Save size={18} /> {saving ? 'שומר...' : 'שמור שינויים'}</>
+                        )}
                     </button>
                     <button
                         onClick={() => {

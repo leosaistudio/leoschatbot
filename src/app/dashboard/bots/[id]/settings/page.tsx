@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Settings2, Trash2, ArrowRight, AlertTriangle } from 'lucide-react'
+import { Settings2, Trash2, ArrowRight, AlertTriangle, Check, X } from 'lucide-react'
 
 export default function BotSettingsAdvancedPage() {
     const params = useParams()
@@ -13,6 +13,27 @@ export default function BotSettingsAdvancedPage() {
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
     const [saving, setSaving] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+    // Load existing bot data
+    useEffect(() => {
+        const loadBot = async () => {
+            try {
+                const res = await fetch(`/api/bots/${params.id}`)
+                if (res.ok) {
+                    const bot = await res.json()
+                    if (bot.name) setName(bot.name)
+                    if (bot.description) setDescription(bot.description)
+                }
+            } catch (error) {
+                console.error('Error loading bot:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadBot()
+    }, [params.id])
 
     const handleDelete = async () => {
         setDeleting(true)
@@ -27,18 +48,36 @@ export default function BotSettingsAdvancedPage() {
 
     const handleSave = async () => {
         setSaving(true)
+        setSaveStatus('idle')
         try {
-            await fetch(`/api/bots/${params.id}`, {
+            const res = await fetch(`/api/bots/${params.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, description }),
             })
-            router.refresh()
+            if (res.ok) {
+                setSaveStatus('success')
+                setTimeout(() => setSaveStatus('idle'), 3000)
+                router.refresh()
+            } else {
+                setSaveStatus('error')
+                setTimeout(() => setSaveStatus('idle'), 3000)
+            }
         } catch (error) {
             console.error('Error saving:', error)
+            setSaveStatus('error')
+            setTimeout(() => setSaveStatus('idle'), 3000)
         } finally {
             setSaving(false)
         }
+    }
+
+    if (loading) {
+        return (
+            <div className="max-w-2xl mx-auto flex items-center justify-center py-20">
+                <div className="text-slate-500">טוען...</div>
+            </div>
+        )
     }
 
     return (
@@ -87,9 +126,20 @@ export default function BotSettingsAdvancedPage() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition disabled:opacity-50"
+                    className={`px-6 py-3 rounded-xl transition disabled:opacity-50 flex items-center gap-2 ${saveStatus === 'success'
+                            ? 'bg-green-600 text-white'
+                            : saveStatus === 'error'
+                                ? 'bg-red-600 text-white'
+                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                        }`}
                 >
-                    {saving ? 'שומר...' : 'שמור שינויים'}
+                    {saveStatus === 'success' ? (
+                        <><Check size={18} /> נשמר בהצלחה!</>
+                    ) : saveStatus === 'error' ? (
+                        <><X size={18} /> שגיאה בשמירה</>
+                    ) : (
+                        saving ? 'שומר...' : 'שמור שינויים'
+                    )}
                 </button>
             </div>
 
