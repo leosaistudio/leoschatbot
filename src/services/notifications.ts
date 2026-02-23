@@ -43,40 +43,44 @@ export async function notifyNewConversation(
 }
 
 /**
- * Send email notification using Resend or SMTP
+ * Send email notification using Postmark API
  */
 async function sendEmailNotification(
     email: string,
     userName: string | null,
     payload: NotificationPayload
 ): Promise<void> {
-    // Check if we have email configured
-    const resendApiKey = process.env.RESEND_API_KEY
+    const postmarkToken = process.env.POSTMARK_SERVER_TOKEN
 
-    if (resendApiKey) {
+    if (postmarkToken) {
         try {
-            const response = await fetch('https://api.resend.com/emails', {
+            const response = await fetch('https://api.postmarkapp.com/email', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${resendApiKey}`,
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Postmark-Server-Token': postmarkToken,
                 },
                 body: JSON.stringify({
-                    from: process.env.EMAIL_FROM || 'ChatBot AI <notifications@chatbot.ai>',
-                    to: email,
-                    subject: `💬 שיחה חדשה ב-${payload.botName}`,
-                    html: generateEmailHtml(userName, payload),
+                    From: process.env.EMAIL_FROM || 'no-reply@leos.es',
+                    To: email,
+                    Subject: `💬 שיחה חדשה ב-${payload.botName}`,
+                    HtmlBody: generateEmailHtml(userName, payload),
+                    MessageStream: 'outbound',
                 }),
             })
 
             if (!response.ok) {
-                console.error('Failed to send email:', await response.text())
+                const errorBody = await response.text()
+                console.error('Failed to send email via Postmark:', errorBody)
+            } else {
+                console.log('Email notification sent successfully to:', email)
             }
         } catch (error) {
             console.error('Email notification error:', error)
         }
     } else {
-        console.log('Email notification skipped - RESEND_API_KEY not configured')
+        console.log('Email notification skipped - POSTMARK_SERVER_TOKEN not configured')
     }
 }
 
