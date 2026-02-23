@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// Helper to add CORS headers
+function corsHeaders(response: NextResponse) {
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    return response
+}
+
+// OPTIONS - CORS preflight
+export async function OPTIONS() {
+    return corsHeaders(new NextResponse(null, { status: 200 }))
+}
+
 // GET new messages for a conversation (for widget polling)
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
@@ -8,7 +21,7 @@ export async function GET(request: NextRequest) {
     const afterTime = searchParams.get('afterTime') // Use timestamp instead of ID
 
     if (!conversationId) {
-        return NextResponse.json({ error: 'Missing conversationId' }, { status: 400 })
+        return corsHeaders(NextResponse.json({ error: 'Missing conversationId' }, { status: 400 }))
     }
 
     // Build query
@@ -42,9 +55,9 @@ export async function GET(request: NextRequest) {
         select: { status: true },
     })
 
-    return NextResponse.json({
+    return corsHeaders(NextResponse.json({
         messages,
         humanTakeover: conversation?.status === 'human_takeover',
-    })
+    }))
 }
 

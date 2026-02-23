@@ -460,15 +460,18 @@
       const avatar = document.getElementById('chatbot-avatar');
       const toggleBtn = document.getElementById('chatbot-toggle-btn');
 
+      // Make avatar URL absolute if it's relative (needed when widget is on external sites)
+      const avatarSrc = config.avatarUrl.startsWith('/') ? `${apiUrl}${config.avatarUrl}` : config.avatarUrl;
+
       // Update header avatar
       if (avatar) {
-        avatar.innerHTML = `<img src="${config.avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        avatar.innerHTML = `<img src="${avatarSrc}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         avatar.style.background = 'transparent';
       }
 
       // Update toggle button
       if (toggleBtn) {
-        toggleBtn.innerHTML = `<img src="${config.avatarUrl}" alt="Open Chat" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        toggleBtn.innerHTML = `<img src="${avatarSrc}" alt="Open Chat" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         toggleBtn.style.background = config.primaryColor || '#8B5CF6';
         toggleBtn.style.padding = '0';
         toggleBtn.style.overflow = 'hidden';

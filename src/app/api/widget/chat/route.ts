@@ -13,6 +13,19 @@ const chatSchema = z.object({
     image: z.string().optional().nullable(), // Base64 image data
 })
 
+// Helper to add CORS headers
+function corsHeaders(response: NextResponse) {
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    return response
+}
+
+// OPTIONS - CORS preflight
+export async function OPTIONS() {
+    return corsHeaders(new NextResponse(null, { status: 200 }))
+}
+
 // POST - Send a message and get AI response
 export async function POST(request: NextRequest) {
     try {
@@ -23,10 +36,10 @@ export async function POST(request: NextRequest) {
 
         if (!parsed.success) {
             console.log('Validation errors:', parsed.error.errors)
-            return NextResponse.json(
+            return corsHeaders(NextResponse.json(
                 { error: parsed.error.errors[0].message },
                 { status: 400 }
-            )
+            ))
         }
 
         const { botId, visitorId, message, conversationId: existingConvId, pageUrl, image } = parsed.data
@@ -51,11 +64,11 @@ export async function POST(request: NextRequest) {
         })
 
         if (!bot) {
-            return NextResponse.json({ error: 'Bot not found' }, { status: 404 })
+            return corsHeaders(NextResponse.json({ error: 'Bot not found' }, { status: 404 }))
         }
 
         if (bot.status !== 'active') {
-            return NextResponse.json({ error: 'Bot is not active' }, { status: 400 })
+            return corsHeaders(NextResponse.json({ error: 'Bot is not active' }, { status: 400 }))
         }
 
         // Check business hours
@@ -69,12 +82,12 @@ export async function POST(request: NextRequest) {
         })
 
         if (!hoursCheck.isOpen) {
-            return NextResponse.json({
+            return corsHeaders(NextResponse.json({
                 conversationId: existingConvId || null,
                 response: hoursCheck.message,
                 isNewConversation: false,
                 isOffline: true,
-            })
+            }))
         }
 
         // Get or create conversation
@@ -104,12 +117,12 @@ export async function POST(request: NextRequest) {
                 },
             })
 
-            return NextResponse.json({
+            return corsHeaders(NextResponse.json({
                 conversationId,
                 isNewConversation: false,
                 response: null, // No AI response, agent will respond
                 humanTakeover: true,
-            })
+            }))
         }
 
         // Get conversation history
@@ -143,17 +156,17 @@ export async function POST(request: NextRequest) {
         // TODO: Deduct credits from bot owner
         // await useCreditsForMessage(bot.userId)
 
-        return NextResponse.json({
+        return corsHeaders(NextResponse.json({
             conversationId,
             isNewConversation,
             response,
             welcomeMessage: isNewConversation ? bot.welcomeMessage : undefined,
-        })
+        }))
     } catch (error) {
         console.error('Chat error:', error)
-        return NextResponse.json(
+        return corsHeaders(NextResponse.json(
             { error: 'Failed to process message' },
             { status: 500 }
-        )
+        ))
     }
 }
