@@ -50,7 +50,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n_default"
-      - "traefik.http.routers.chatbot.rule=Host(`srv1295691.hstgr.cloud`)"
+      - "traefik.http.routers.chatbot.rule=Host(`chatbot.leos.co.il`)"
       - "traefik.http.routers.chatbot.entrypoints=websecure"
       - "traefik.http.routers.chatbot.tls=true"
       - "traefik.http.routers.chatbot.tls.certresolver=mytlschallenge"
