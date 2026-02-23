@@ -626,21 +626,39 @@
       .replace(/<[^>]*>/g, '')
       // Remove "לחצו כאן לרכישה 🛒" duplicates from broken links
       .replace(/(לחצו כאן לרכישה 🛒\s*)+/g, '')
-      // Clean up excessive whitespace
-      .replace(/\s+/g, ' ')
+      // Clean up excessive spaces (but NOT newlines)
+      .replace(/[^\S\n]+/g, ' ')
+      // Clean up excessive blank lines (3+ newlines → 2)
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    // Step 3: Convert Markdown links [text](url) to clickable HTML
-    let htmlText = cleanText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+    // Step 3: Convert Markdown formatting to HTML
+    // Bold: **text** → <strong>text</strong>
+    let htmlText = cleanText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // Also handle ***text*** (bold italic) → <strong>text</strong>
+    htmlText = htmlText.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong>$1</strong>');
+    // Remove any remaining stray * or # at start of lines
+    htmlText = htmlText.replace(/^#{1,3}\s*/gm, '');
+
+    // Step 4: Convert Markdown links [text](url) to clickable HTML
+    htmlText = htmlText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
       return `<a href="${url}" target="_blank" rel="noopener" class="chatbot-link">🔗 ${linkText}</a>`;
     });
 
-    // Step 4: Convert any remaining raw URLs to clickable links
+    // Step 5: Convert any remaining raw URLs to clickable links
     htmlText = htmlText.replace(/(https?:\/\/[^\s<\)]+)/g, (url) => {
       // Clean URL of any trailing punctuation
       const cleanUrl = url.replace(/[,.\s]+$/, '');
       return `<a href="${cleanUrl}" target="_blank" rel="noopener" class="chatbot-link">🔗 לעמוד המוצר</a>`;
     });
+
+    // Step 6: Convert numbered lists (e.g. "1. text") to styled items
+    htmlText = htmlText.replace(/^(\d+)\.\s+/gm, '<br><strong>$1.</strong> ');
+
+    // Step 7: Convert newlines to <br> for proper rendering
+    htmlText = htmlText.replace(/\n/g, '<br>');
+    // Clean up excessive <br> tags
+    htmlText = htmlText.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
 
     div.innerHTML = htmlText;
     messagesContainer.appendChild(div);
