@@ -771,6 +771,7 @@
   let lastPollTime = Date.now();
   let isHumanTakeover = false;
   let pollingInterval = null;
+  let seenMessageIds = new Set();
 
   // Start polling for new messages
   function startPolling() {
@@ -809,6 +810,10 @@
       // Show new messages from human agent or bot
       if (data.messages && data.messages.length > 0) {
         data.messages.forEach(msg => {
+          // Skip messages we've already displayed
+          if (seenMessageIds.has(msg.id)) return;
+          seenMessageIds.add(msg.id);
+
           // Only show if it's an assistant message
           if (msg.role === 'assistant') {
             // Don't show system messages again if already shown
@@ -888,8 +893,8 @@
       } else if (data.response) {
         // AI responded - show the message
         addMessage(data.response, 'bot');
-        // Update poll time to now to prevent duplicates
-        lastPollTime = Date.now();
+        // Update poll time with buffer to prevent duplicates from clock skew
+        lastPollTime = Date.now() + 3000;
         isHumanTakeover = false;
       }
 
