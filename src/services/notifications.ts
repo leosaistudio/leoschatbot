@@ -25,6 +25,7 @@ export async function notifyNewConversation(
             email: true,
             name: true,
             notifyEmail: true,
+            whatsappNumber: true,
             webhookUrl: true,
         },
     })
@@ -38,7 +39,7 @@ export async function notifyNewConversation(
 
     // Send webhook (for Make/Zapier/n8n)
     if (user.webhookUrl) {
-        await sendWebhookNotification(user.webhookUrl, payload)
+        await sendWebhookNotification(user.webhookUrl, payload, user.whatsappNumber)
     }
 }
 
@@ -137,7 +138,8 @@ function generateEmailHtml(userName: string | null, payload: NotificationPayload
  */
 async function sendWebhookNotification(
     webhookUrl: string,
-    payload: NotificationPayload
+    payload: NotificationPayload,
+    whatsappNumber: string | null
 ): Promise<void> {
     try {
         const response = await fetch(webhookUrl, {
@@ -148,6 +150,7 @@ async function sendWebhookNotification(
             body: JSON.stringify({
                 event: 'new_conversation',
                 timestamp: new Date().toISOString(),
+                whatsappNumber: whatsappNumber || null,
                 conversation: {
                     id: payload.conversationId,
                     botId: payload.botId,

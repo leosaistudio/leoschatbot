@@ -26,6 +26,7 @@ model User {
   monthlyPayment Float    @default(0) @map("monthly_payment") // Monthly subscription amount
   frozenAt      DateTime? @map("frozen_at") // When account was frozen
   notifyEmail   Boolean   @default(true) @map("notify_email")
+  whatsappNumber String?  @map("whatsapp_number")
   webhookUrl    String?   @map("webhook_url")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
