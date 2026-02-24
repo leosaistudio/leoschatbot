@@ -64,6 +64,25 @@ export async function generateChatResponse(options: ChatOptions): Promise<string
 
     // If image uploaded, try to match product first
     if (image) {
+        // Check if user just uploaded an image without a specific question
+        const imageOnlyMarkers = ['העליתי תמונה', 'חפש לי את המוצר הזה', 'מה זה במידע שיש לך?']
+        const isImageOnly = imageOnlyMarkers.includes(userMessage.trim())
+
+        if (isImageOnly) {
+            // Just acknowledge the image and wait for a follow-up question
+            const ackMessage = 'קיבלתי את התמונה! 📸\nמה תרצה לדעת עליה? לדוגמה: האם יש לכם את המוצר הזה במלאי?'
+
+            await prisma.message.createMany({
+                data: [
+                    { conversationId, role: 'user', content: userMessage },
+                    { conversationId, role: 'assistant', content: ackMessage },
+                ],
+            })
+
+            return ackMessage
+        }
+
+        // User provided a real question with the image - search for products
         try {
             console.log('🔍 Searching for matching products...')
             const matchingProducts = await findMatchingProducts(botId, image, 3)

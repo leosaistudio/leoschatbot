@@ -562,11 +562,10 @@
         pendingImage = file;
         // Show preview
         addImagePreview(file);
-        // Auto-send with default search message
-        setTimeout(() => {
-          document.getElementById('chatbot-input').value = 'חפש לי את המוצר הזה';
-          sendMessage();
-        }, 500);
+        // Prompt user to type their question about the image
+        const input = document.getElementById('chatbot-input');
+        input.placeholder = 'מה תרצה לדעת על התמונה?';
+        input.focus();
       }
     });
   }
@@ -889,7 +888,7 @@
         body: JSON.stringify({
           botId,
           visitorId,
-          message: message || 'מה זה במידע שיש לך?',
+          message: message || 'העליתי תמונה',
           conversationId,
           pageUrl: window.location.href,
           image: imageBase64,
