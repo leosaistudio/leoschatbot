@@ -4,7 +4,8 @@ import { getOpenAI } from '@/lib/openai'
 import { notifyConversationSummary } from '@/services/notifications'
 
 // POST - Auto-close inactive conversations and send summary emails
-// Call this via cron job every 30 minutes: curl -X POST https://chatbot.leos.co.il/api/cron/close-inactive?secret=YOUR_SECRET
+// Call this via cron job every 30 minutes:
+// curl -X POST "https://chatbot.leos.co.il/api/cron/close-inactive?secret=YOUR_SECRET"
 export async function POST(request: NextRequest) {
     // Simple secret-based auth for cron
     const { searchParams } = new URL(request.url)
@@ -14,17 +15,13 @@ export async function POST(request: NextRequest) {
     }
 
     const INACTIVE_MINUTES = 30
-
-    // Find conversations that have been inactive for 30+ minutes
     const cutoff = new Date(Date.now() - INACTIVE_MINUTES * 60 * 1000)
 
+    // Find active conversations that started more than 30 min ago (startedAt instead of updatedAt)
     const inactiveConversations = await prisma.conversation.findMany({
         where: {
             status: { in: ['active', 'human_takeover'] },
-            updatedAt: { lt: cutoff },
-            messages: {
-                some: {},  // Must have at least one message
-            },
+            startedAt: { lt: cutoff },
         },
         include: {
             messages: {
@@ -34,13 +31,23 @@ export async function POST(request: NextRequest) {
                 select: { name: true, userId: true },
             },
         },
-        take: 20,  // Process max 20 per run to avoid timeout
+        take: 20,
     })
 
     let closed = 0
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
     for (const conv of inactiveConversations) {
+        // Skip conversations with no messages
+        if (!conv.messages || conv.messages.length === 0) {
+            await prisma.conversation.update({
+                where: { id: conv.id },
+                data: { status: 'closed' },
+            })
+            closed++
+            continue
+        }
+
         try {
             // Mark as closed
             await prisma.conversation.update({
