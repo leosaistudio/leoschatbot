@@ -19,10 +19,10 @@ export default async function DashboardLayout({
             {/* Sidebar */}
             <DashboardSidebar />
 
-            {/* Main Content */}
-            <div className="mr-64">
+            {/* Main Content - full width on mobile, offset by sidebar on desktop */}
+            <div className="md:mr-64">
                 <DashboardHeader user={session.user} />
-                <main className="p-6">
+                <main className="p-4 md:p-6">
                     {children}
                 </main>
             </div>
