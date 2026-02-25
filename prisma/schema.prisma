@@ -35,6 +35,7 @@ model User {
   bots          Bot[]
   creditBalance CreditBalance?
   creditHistory CreditHistory[]
+  notifications Notification[]
   
   @@map("users")
 }
@@ -375,4 +376,37 @@ model Subscription {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   
   @@map("subscriptions")
+}
+
+// ==================== Notifications & Broadcasts ====================
+
+model AdminBroadcast {
+  id            String   @id @default(cuid())
+  title         String
+  content       String   @db.Text
+  type          String   @default("info") // 'info', 'warning', 'update'
+  targetUserId  String?  @map("target_user_id") // If null, global
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([targetUserId])
+  @@index([isActive])
+  @@map("admin_broadcasts")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  content     String   @db.Text
+  type        String   @default("info")
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
 }

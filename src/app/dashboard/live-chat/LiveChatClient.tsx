@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MessageSquare, User, Bot, Send, ArrowRight, Phone, RefreshCw, Zap, ArrowLeft } from 'lucide-react'
+import { MessageSquare, User, Bot, Send, ArrowRight, Phone, RefreshCw, Zap, ArrowLeft, X } from 'lucide-react'
 
 interface Message {
     id: string
@@ -143,6 +143,26 @@ export default function LiveChatClient({ initialConversations }: Props) {
         }
     }
 
+    async function handleCloseConversation() {
+        if (!selectedId || !confirm('האם אתה בטוח שברצונך לסגור את השיחה? פעולה זו תשלח סיכום למייל.')) return
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/conversations/${selectedId}/close`, {
+                method: 'POST',
+            })
+            if (res.ok) {
+                // Remove from active list
+                setConversations(prev => prev.filter(c => c.id !== selectedId))
+                setSelectedId(null)
+                setMobileView('list')
+            }
+        } catch (error) {
+            console.error('Failed to close conversation:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     async function sendMessage(e: React.FormEvent) {
         e.preventDefault()
         if (!selectedId || !newMessage.trim() || sending) return
@@ -279,6 +299,15 @@ export default function LiveChatClient({ initialConversations }: Props) {
                                     <span className="hidden md:inline">השתלט</span>
                                 </button>
                             )}
+
+                            <button
+                                onClick={handleCloseConversation}
+                                className="flex items-center gap-1 md:gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-sm border border-red-100"
+                                title="סגור שיחה ושלח סיכום"
+                            >
+                                <X size={16} />
+                                <span className="hidden md:inline">סגור שיחה</span>
+                            </button>
                         </div>
                     </div>
 

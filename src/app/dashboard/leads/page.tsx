@@ -7,7 +7,6 @@ export default async function LeadsPage() {
     const session = await auth()
     if (!session?.user?.id) redirect('/login')
 
-    // Get all leads for user's bots
     const leads = await prisma.lead.findMany({
         where: {
             bot: { userId: session.user.id },
@@ -43,61 +42,102 @@ export default async function LeadsPage() {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">שם</th>
-                                <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">אימייל</th>
-                                <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">טלפון</th>
-                                <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">בוט</th>
-                                <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">תאריך</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {leads.map((lead) => (
-                                <tr key={lead.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
-                                                {lead.name?.charAt(0) || '?'}
-                                            </div>
-                                            <span className="font-medium text-slate-800">
-                                                {lead.name || 'ללא שם'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {lead.email ? (
-                                            <a href={`mailto:${lead.email}`} className="flex items-center gap-2 text-blue-600 hover:underline">
-                                                <Mail size={16} />
-                                                {lead.email}
-                                            </a>
-                                        ) : (
-                                            <span className="text-slate-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {lead.phone ? (
-                                            <a href={`tel:${lead.phone}`} className="flex items-center gap-2 text-green-600 hover:underline">
-                                                <Phone size={16} />
-                                                {lead.phone}
-                                            </a>
-                                        ) : (
-                                            <span className="text-slate-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-600">
-                                        {lead.bot.name}
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-500 text-sm">
-                                        {new Date(lead.createdAt).toLocaleDateString('he-IL')}
-                                    </td>
+                <>
+                    {/* Desktop: Table */}
+                    <div className="hidden md:block bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">שם</th>
+                                    <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">אימייל</th>
+                                    <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">טלפון</th>
+                                    <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">בוט</th>
+                                    <th className="text-right px-6 py-4 text-sm font-medium text-slate-500">תאריך</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {leads.map((lead) => (
+                                    <tr key={lead.id} className="hover:bg-slate-50">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
+                                                    {lead.name?.charAt(0) || '?'}
+                                                </div>
+                                                <span className="font-medium text-slate-800">
+                                                    {lead.name || 'ללא שם'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {lead.email ? (
+                                                <a href={`mailto:${lead.email}`} className="flex items-center gap-2 text-blue-600 hover:underline">
+                                                    <Mail size={16} />
+                                                    {lead.email}
+                                                </a>
+                                            ) : (
+                                                <span className="text-slate-400">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {lead.phone ? (
+                                                <a href={`tel:${lead.phone}`} className="flex items-center gap-2 text-green-600 hover:underline">
+                                                    <Phone size={16} />
+                                                    {lead.phone}
+                                                </a>
+                                            ) : (
+                                                <span className="text-slate-400">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600">
+                                            {lead.bot.name}
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-500 text-sm">
+                                            {new Date(lead.createdAt).toLocaleDateString('he-IL')}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile: Card layout */}
+                    <div className="md:hidden space-y-3">
+                        {leads.map((lead) => (
+                            <div key={lead.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
+                                        {lead.name?.charAt(0) || '?'}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-medium text-slate-800 truncate">{lead.name || 'ללא שם'}</p>
+                                        <p className="text-xs text-slate-400">{lead.bot.name} • {new Date(lead.createdAt).toLocaleDateString('he-IL')}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {lead.email && (
+                                        <a href={`mailto:${lead.email}`} className="flex items-center gap-2 text-sm text-blue-600">
+                                            <Mail size={14} className="flex-shrink-0" />
+                                            <span className="truncate">{lead.email}</span>
+                                        </a>
+                                    )}
+                                    {lead.phone && (
+                                        <a href={`tel:${lead.phone}`} className="flex items-center gap-2 text-sm text-green-600">
+                                            <Phone size={14} className="flex-shrink-0" />
+                                            <span>{lead.phone}</span>
+                                        </a>
+                                    )}
+                                    {lead.pageUrl && (
+                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                            <Globe size={14} className="flex-shrink-0" />
+                                            <span className="truncate">{lead.pageUrl}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     )
