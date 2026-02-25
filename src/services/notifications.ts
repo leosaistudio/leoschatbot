@@ -171,3 +171,118 @@ async function sendWebhookNotification(
         console.error('Webhook notification error:', error)
     }
 }
+
+/**
+ * Send conversation summary email when conversation ends
+ */
+export async function notifyConversationSummary(
+    userId: string,
+    conversationId: string,
+    summary: string,
+    botName: string,
+    messages: { role: string; content: string; createdAt: Date }[],
+    dashboardUrl: string
+): Promise<void> {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            email: true,
+            name: true,
+            notifyEmail: true,
+        },
+    })
+
+    if (!user || !user.notifyEmail || !user.email) return
+
+    const postmarkToken = process.env.POSTMARK_SERVER_TOKEN
+    if (!postmarkToken) {
+        console.log('Summary email skipped - POSTMARK_SERVER_TOKEN not configured')
+        return
+    }
+
+    try {
+        const response = await fetch('https://api.postmarkapp.com/email', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Postmark-Server-Token': postmarkToken,
+            },
+            body: JSON.stringify({
+                From: process.env.EMAIL_FROM || 'no-reply@leos.es',
+                To: user.email,
+                Subject: `📋 סיכום שיחה - ${botName}`,
+                HtmlBody: generateSummaryEmailHtml(user.name, botName, summary, messages, dashboardUrl),
+                MessageStream: 'outbound',
+            }),
+        })
+
+        if (!response.ok) {
+            const errorBody = await response.text()
+            console.error('Failed to send summary email:', errorBody)
+        } else {
+            console.log('Summary email sent successfully to:', user.email)
+        }
+    } catch (error) {
+        console.error('Summary email error:', error)
+    }
+}
+
+/**
+ * Generate HTML for conversation summary email
+ */
+function generateSummaryEmailHtml(
+    userName: string | null,
+    botName: string,
+    summary: string,
+    messages: { role: string; content: string; createdAt: Date }[],
+    dashboardUrl: string
+): string {
+    const messagesHtml = messages.map(m => {
+        const isUser = m.role === 'user'
+        const time = new Date(m.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+        const truncatedContent = m.content.length > 300 ? m.content.substring(0, 300) + '...' : m.content
+        return `
+        <div style="margin: 8px 0; text-align: ${isUser ? 'left' : 'right'};">
+            <div style="display: inline-block; max-width: 80%; padding: 10px 14px; border-radius: 12px; background: ${isUser ? '#e8e8e8' : '#8B5CF6'}; color: ${isUser ? '#333' : 'white'}; font-size: 14px; text-align: right;">
+                <strong>${isUser ? '👤 מבקר' : '🤖 בוט'}</strong> <small style="opacity:0.7">${time}</small><br>
+                ${truncatedContent.replace(/\n/g, '<br>')}
+            </div>
+        </div>`
+    }).join('')
+
+    return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head><meta charset="UTF-8"></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div style="background: linear-gradient(135deg, #8B5CF6, #6366F1); color: white; padding: 24px; text-align: center;">
+            <h1 style="margin:0;">📋 סיכום שיחה</h1>
+            <p style="margin: 8px 0 0; opacity: 0.9;">${botName}</p>
+        </div>
+        <div style="padding: 24px;">
+            <p>שלום ${userName || 'משתמש יקר'},</p>
+            
+            <div style="background: #f0f9ff; border-right: 4px solid #8B5CF6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <strong>📝 סיכום:</strong><br>
+                ${summary}
+            </div>
+
+            <h3 style="color: #444; margin-top: 24px;">💬 תמלול השיחה (${messages.length} הודעות):</h3>
+            <div style="background: #fafafa; border-radius: 12px; padding: 16px; max-height: 500px; overflow: auto;">
+                ${messagesHtml}
+            </div>
+
+            <center style="margin-top: 24px;">
+                <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6, #6366F1); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">צפה בשיחה המלאה</a>
+            </center>
+        </div>
+        <div style="text-align: center; padding: 16px; color: #888; font-size: 12px;">
+            ChatBot AI - מערכת צ'אטבוט חכמה
+        </div>
+      </div>
+    </body>
+    </html>
+    `
+}
