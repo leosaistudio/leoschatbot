@@ -43,11 +43,13 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
-# Copy Prisma client + CLI from deps
+# Copy Prisma client from deps
 COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
-COPY --from=deps /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# Install Prisma CLI for db push (copy package.json to get the correct version)
+COPY --from=deps /app/package.json ./package.json
+RUN npm install prisma --save-dev --ignore-scripts 2>/dev/null || true
 
 # Create uploads directory
 RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs ./public/uploads
