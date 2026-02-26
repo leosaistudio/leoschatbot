@@ -251,18 +251,6 @@ model ProductImage {
 
 // ==================== Admin Features ====================
 
-model AdminBroadcast {
-  id            String   @id @default(cuid())
-  title         String
-  content       String   @db.Text
-  type          String   @default("info") // 'info', 'warning', 'update'
-  targetUserId  String?  @map("target_user_id") // null = all users, userId = specific user
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  
-  @@map("admin_broadcasts")
-}
-
 model ApiUsageLog {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
