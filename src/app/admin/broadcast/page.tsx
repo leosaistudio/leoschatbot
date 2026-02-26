@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Megaphone, Send, Trash2, CheckCircle, AlertTriangle, Info, Users, User } from 'lucide-react'
+import { Megaphone, Send, Trash2, CheckCircle, AlertTriangle, Info, Users as UsersIcon, User as UserIcon } from 'lucide-react'
 
 interface Broadcast {
     id: string
@@ -39,9 +39,15 @@ export default function BroadcastPage() {
         try {
             const res = await fetch('/api/admin/broadcasts')
             const data = await res.json()
-            setBroadcasts(data)
+            if (Array.isArray(data)) {
+                setBroadcasts(data)
+            } else {
+                console.error('Invalid broadcasts data format:', data)
+                setBroadcasts([])
+            }
         } catch (error) {
             console.error('Error fetching broadcasts:', error)
+            setBroadcasts([])
         } finally {
             setLoading(false)
         }
@@ -51,9 +57,16 @@ export default function BroadcastPage() {
         try {
             const res = await fetch('/api/admin/users')
             const data = await res.json()
-            setUsers(data.users || data)
+            const usersData = data.users || data
+            if (Array.isArray(usersData)) {
+                setUsers(usersData)
+            } else {
+                console.error('Invalid users data format:', data)
+                setUsers([])
+            }
         } catch (error) {
             console.error('Error fetching users:', error)
+            setUsers([])
         }
     }
 
@@ -119,6 +132,19 @@ export default function BroadcastPage() {
         }
     }
 
+    // Client-side only date rendering to avoid hydration mismatch
+    const [isMounted, setIsMounted] = useState(false)
+    useEffect(() => { setIsMounted(true) }, [])
+
+    const formatDate = (dateStr: string) => {
+        if (!isMounted) return ''
+        try {
+            return new Date(dateStr).toLocaleString('he-IL')
+        } catch (e) {
+            return dateStr
+        }
+    }
+
     const getTypeLabel = (type: string) => {
         switch (type) {
             case 'warning': return 'אזהרה'
@@ -174,8 +200,8 @@ export default function BroadcastPage() {
                                         key={t}
                                         onClick={() => setType(t)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition ${type === t
-                                                ? 'border-purple-500 bg-purple-500/20 text-white'
-                                                : 'border-slate-600 text-slate-400 hover:border-slate-500'
+                                            ? 'border-purple-500 bg-purple-500/20 text-white'
+                                            : 'border-slate-600 text-slate-400 hover:border-slate-500'
                                             }`}
                                     >
                                         {getTypeIcon(t)}
@@ -230,8 +256,8 @@ export default function BroadcastPage() {
                             <div
                                 key={broadcast.id}
                                 className={`p-4 rounded-lg border ${broadcast.isActive
-                                        ? 'bg-slate-700/50 border-slate-600'
-                                        : 'bg-slate-800/50 border-slate-700 opacity-50'
+                                    ? 'bg-slate-700/50 border-slate-600'
+                                    : 'bg-slate-800/50 border-slate-700 opacity-50'
                                     }`}
                             >
                                 <div className="flex items-start justify-between">
@@ -242,19 +268,19 @@ export default function BroadcastPage() {
                                                 <h4 className="text-white font-medium">{broadcast.title}</h4>
                                                 {broadcast.targetUserId ? (
                                                     <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full flex items-center gap-1">
-                                                        <User size={12} />
+                                                        <UserIcon size={12} />
                                                         {broadcast.targetUserEmail || 'משתמש ספציפי'}
                                                     </span>
                                                 ) : (
                                                     <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full flex items-center gap-1">
-                                                        <Users size={12} />
+                                                        <UsersIcon size={12} />
                                                         כולם
                                                     </span>
                                                 )}
                                             </div>
                                             <p className="text-slate-400 text-sm mt-1">{broadcast.content}</p>
                                             <p className="text-slate-500 text-xs mt-2">
-                                                {new Date(broadcast.createdAt).toLocaleString('he-IL')}
+                                                {formatDate(broadcast.createdAt)}
                                             </p>
                                         </div>
                                     </div>
@@ -262,8 +288,8 @@ export default function BroadcastPage() {
                                         <button
                                             onClick={() => toggleActive(broadcast.id, broadcast.isActive)}
                                             className={`px-3 py-1 rounded text-sm ${broadcast.isActive
-                                                    ? 'bg-green-500/20 text-green-400'
-                                                    : 'bg-slate-600 text-slate-400'
+                                                ? 'bg-green-500/20 text-green-400'
+                                                : 'bg-slate-600 text-slate-400'
                                                 }`}
                                         >
                                             {broadcast.isActive ? 'פעיל' : 'לא פעיל'}
