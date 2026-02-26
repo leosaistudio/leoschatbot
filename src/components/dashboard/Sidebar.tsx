@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -12,7 +12,8 @@ import {
     Settings,
     HelpCircle,
     Menu,
-    X
+    X,
+    Shield
 } from 'lucide-react'
 
 const menuItems = [
@@ -27,6 +28,17 @@ const menuItems = [
 export default function DashboardSidebar() {
     const pathname = usePathname()
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
+
+    useEffect(() => {
+        // Check if user is admin
+        fetch('/api/user/role')
+            .then(res => res.json())
+            .then(data => {
+                if (data.role === 'admin') setIsAdmin(true)
+            })
+            .catch(() => { })
+    }, [])
 
     const navContent = (
         <>
@@ -60,8 +72,18 @@ export default function DashboardSidebar() {
                 })}
             </nav>
 
-            {/* Help */}
-            <div className="p-4 border-t border-slate-700">
+            {/* Footer - Admin link + Help */}
+            <div className="p-4 border-t border-slate-700 space-y-1">
+                {isAdmin && (
+                    <Link
+                        href="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 rounded-lg transition font-medium"
+                    >
+                        <Shield size={20} />
+                        <span>פאנל ניהול</span>
+                    </Link>
+                )}
                 <Link
                     href="/dashboard/help"
                     onClick={() => setMobileOpen(false)}
@@ -76,7 +98,7 @@ export default function DashboardSidebar() {
 
     return (
         <>
-            {/* Mobile hamburger button - visible only on mobile */}
+            {/* Mobile hamburger button */}
             <button
                 className="fixed top-4 right-4 z-[60] p-2 bg-slate-900 text-white rounded-lg shadow-lg md:hidden"
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -93,7 +115,7 @@ export default function DashboardSidebar() {
                 />
             )}
 
-            {/* Sidebar - desktop: always visible | mobile: slide in/out */}
+            {/* Sidebar */}
             <aside className={`
                 fixed right-0 top-0 h-full w-64 bg-slate-900 text-white shadow-xl z-[56] flex flex-col
                 transition-transform duration-300

@@ -18,6 +18,7 @@ import {
 const menuItems = [
     { href: '/admin', icon: LayoutDashboard, label: 'סקירה כללית' },
     { href: '/admin/users', icon: Users, label: 'משתמשים' },
+    { href: '/admin/customers', icon: Users, label: 'ניהול לקוחות' },
     { href: '/admin/plans', icon: Package, label: 'מסלולים' },
     { href: '/admin/broadcast', icon: Megaphone, label: 'הודעות' },
     { href: '/admin/bots', icon: Bot, label: 'כל הבוטים' },

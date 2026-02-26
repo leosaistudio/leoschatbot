@@ -14,8 +14,8 @@
 1. **בשרת**, פתח Terminal דרך Hostinger ותריץ:
 ```bash
 cd /root
-git clone https://github.com/YOUR-USERNAME/website-chatbot.git
-cd website-chatbot
+git clone https://github.com/leosaistudio/leoschatbot.git
+cd leoschatbot
 ```
 
 ### אופציה ב' - העלאה ידנית עם SCP:
@@ -34,8 +34,8 @@ scp chatbot-deploy.tar.gz root@92.113.26.3:/root/
 3. **בשרת** (Terminal של Hostinger):
 ```bash
 cd /root
-mkdir -p website-chatbot
-cd website-chatbot
+mkdir -p leoschatbot
+cd leoschatbot
 tar -xzf ../chatbot-deploy.tar.gz
 ```
 
@@ -46,7 +46,7 @@ tar -xzf ../chatbot-deploy.tar.gz
 **בשרת**, ערוך את קובץ `.env.production`:
 
 ```bash
-cd /root/website-chatbot
+cd /root/leoschatbot
 nano .env.production
 ```
 
@@ -99,6 +99,12 @@ chmod +x deploy.sh
 docker compose exec app npx tsx scripts/create-admin.ts
 ```
 
+> **📌 פרטי הפרויקט:**
+> - **GitHub:** `https://github.com/leosaistudio/leoschatbot`
+> - **נתיב בשרת:** `/root/leoschatbot`
+> - **דומיין:** `chatbot.leos.co.il`
+> - **מייל אדמין:** `office@leos.co.il`
+
 ---
 
 ## שלב 5: גישה לאתר
@@ -128,7 +134,7 @@ http://92.113.26.3:3000
 כשיש שינויים חדשים:
 
 ```bash
-cd /root/website-chatbot
+cd /root/leoschatbot
 git pull                              # (אם משתמש ב-Git)
 docker compose up -d --build          # בנייה מחדש  
 docker compose exec app npx prisma db push   # עדכון DB אם יש שינויים

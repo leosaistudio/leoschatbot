@@ -67,6 +67,16 @@ export default async function AdminDashboard() {
         _count: true,
     })
 
+    // AI cost estimation
+    const tokenUsage = await prisma.conversation.aggregate({
+        _sum: { tokensUsed: true, creditsUsed: true },
+    })
+    const totalTokens = tokenUsage._sum.tokensUsed || 0
+    const totalCreditsUsed = tokenUsage._sum.creditsUsed || 0
+    // gpt-4o-mini: ~$0.15/1M input, ~$0.60/1M output. Average ~$0.3/1M tokens
+    const estimatedCostUsd = (totalTokens / 1_000_000) * 0.3
+    const estimatedCostIls = estimatedCostUsd * 3.7
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -108,12 +118,23 @@ export default async function AdminDashboard() {
             </div>
 
             {/* Stats Grid - Row 2 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard
                     icon={<MessageSquare className="text-cyan-400" size={24} />}
                     label="שיחות"
                     value={totalConversations}
                     subtitle={`${totalMessages.toLocaleString()} הודעות`}
+                />
+                <StatCard
+                    icon={<DollarSign className="text-green-400" size={24} />}
+                    label="עלות AI מוערכת"
+                    value={`₪${estimatedCostIls.toFixed(2)}`}
+                    subtitle={`${totalTokens.toLocaleString()} טוקנים`}
+                />
+                <StatCard
+                    icon={<Users className="text-indigo-400" size={24} />}
+                    label="סה״כ לידים"
+                    value={totalLeads}
                 />
                 <StatCard
                     icon={<UserX className="text-orange-400" size={24} />}
@@ -126,15 +147,6 @@ export default async function AdminDashboard() {
                     label="חשבונות חסומים"
                     value={blockedUsers}
                 />
-                <Link href="/admin/customers" className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 hover:border-purple-500 transition cursor-pointer">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-slate-700 rounded-xl flex items-center justify-center">
-                            <Users className="text-purple-400" size={24} />
-                        </div>
-                    </div>
-                    <p className="text-xl font-bold text-white">ניהול לקוחות →</p>
-                    <p className="text-slate-400 text-sm mt-1">הצג את כל הלקוחות</p>
-                </Link>
             </div>
 
             {/* Two Column Layout */}

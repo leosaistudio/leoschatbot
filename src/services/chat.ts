@@ -226,9 +226,20 @@ ${image ? `תמונה:
         messages.push({ role: 'user', content: userMessage })
     }
 
-    // Call OpenAI (gpt-4o-mini supports Vision)
+    // Call OpenAI with admin-configured model
+    let aiModel = 'gpt-4o-mini'
+    try {
+        const fs = await import('fs')
+        const path = await import('path')
+        const settingsPath = path.join(process.cwd(), '.admin-settings.json')
+        if (fs.existsSync(settingsPath)) {
+            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+            if (settings.aiModel) aiModel = settings.aiModel
+        }
+    } catch { }
+
     const response = await openai().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: aiModel,
         messages: messages,
         temperature: bot.temperature || 0.7,
         max_tokens: 1000,
