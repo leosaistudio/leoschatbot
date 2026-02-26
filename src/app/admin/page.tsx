@@ -5,77 +5,106 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
-    // Get all stats
-    const [
-        totalUsers,
-        activeUsers,
-        frozenUsers,
-        blockedUsers,
-        totalBots,
-        activeBots,
-        totalConversations,
-        totalMessages,
-        totalLeads,
-        recentUsers,
-        broadcasts,
-    ] = await Promise.all([
-        prisma.user.count(),
-        prisma.user.count({ where: { status: 'active' } }),
-        prisma.user.count({ where: { status: 'frozen' } }),
-        prisma.user.count({ where: { status: 'blocked' } }),
-        prisma.bot.count(),
-        prisma.bot.count({ where: { status: 'active' } }),
-        prisma.conversation.count(),
-        prisma.message.count(),
-        prisma.lead.count(),
-        prisma.user.findMany({
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                plan: true,
-                status: true,
-                createdAt: true,
-                _count: { select: { bots: true } },
-            },
-        }),
-        prisma.adminBroadcast.findMany({
-            take: 3,
-            where: { isActive: true },
-            orderBy: { createdAt: 'desc' },
-        }),
-    ])
+    // Default values for robustness
+    let stats = {
+        totalUsers: 0, activeUsers: 0, frozenUsers: 0, blockedUsers: 0,
+        totalBots: 0, activeBots: 0, totalConversations: 0, totalMessages: 0,
+        totalLeads: 0, totalCredits: 0, monthlyRevenue: 0,
+        totalTokens: 0, estimatedCostIls: 0,
+        recentUsers: [] as any[],
+        broadcasts: [] as any[]
+    }
 
-    // Get total credits and revenue in system
-    const creditsData = await prisma.creditBalance.aggregate({
-        _sum: { balance: true },
-    })
-    const totalCredits = creditsData._sum.balance || 0
+    try {
+        const [
+            totalUsersCount,
+            activeUsersCount,
+            frozenUsersCount,
+            blockedUsersCount,
+            totalBotsCount,
+            activeBotsCount,
+            totalConversationsCount,
+            totalMessagesCount,
+            totalLeadsCount,
+            recentUsersList,
+            broadcastsList,
+        ] = await Promise.all([
+            prisma.user.count().catch(e => { console.error('Error totalUsers:', e); return 0 }),
+            prisma.user.count({ where: { status: 'active' } }).catch(e => { console.error('Error activeUsers:', e); return 0 }),
+            prisma.user.count({ where: { status: 'frozen' } }).catch(e => { console.error('Error frozenUsers:', e); return 0 }),
+            prisma.user.count({ where: { status: 'blocked' } }).catch(e => { console.error('Error blockedUsers:', e); return 0 }),
+            prisma.bot.count().catch(e => { console.error('Error totalBots:', e); return 0 }),
+            prisma.bot.count({ where: { status: 'active' } }).catch(e => { console.error('Error activeBots:', e); return 0 }),
+            prisma.conversation.count().catch(e => { console.error('Error totalConversations:', e); return 0 }),
+            prisma.message.count().catch(e => { console.error('Error totalMessages:', e); return 0 }),
+            prisma.lead.count().catch(e => { console.error('Error totalLeads:', e); return 0 }),
+            prisma.user.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    plan: true,
+                    status: true,
+                    createdAt: true,
+                    _count: { select: { bots: true } },
+                },
+            }).catch(e => { console.error('Error recentUsers:', e); return [] }),
+            prisma.adminBroadcast.findMany({
+                take: 3,
+                where: { isActive: true },
+                orderBy: { createdAt: 'desc' },
+            }).catch(e => { console.error('Error broadcasts:', e); return [] }),
+        ])
 
-    // Get monthly revenue (sum of monthlyPayment from active users)
-    const revenueData = await prisma.user.aggregate({
-        _sum: { monthlyPayment: true },
-        where: { status: 'active' },
-    })
-    const monthlyRevenue = revenueData._sum.monthlyPayment || 0
+        // Get total credits and revenue
+        const creditsData = await prisma.creditBalance.aggregate({
+            _sum: { balance: true },
+        }).catch(e => { console.error('Error creditBalance aggregate:', e); return { _sum: { balance: 0 } } })
 
-    // Plan distribution
-    const planCounts = await prisma.user.groupBy({
-        by: ['plan'],
-        _count: true,
-    })
+        const revenueData = await prisma.user.aggregate({
+            _sum: { monthlyPayment: true },
+            where: { status: 'active' },
+        }).catch(e => { console.error('Error revenue aggregate:', e); return { _sum: { monthlyPayment: 0 } } })
 
-    // AI cost estimation
-    const tokenUsage = await prisma.conversation.aggregate({
-        _sum: { tokensUsed: true, creditsUsed: true },
-    })
-    const totalTokens = tokenUsage._sum.tokensUsed || 0
-    const totalCreditsUsed = tokenUsage._sum.creditsUsed || 0
-    // gpt-4o-mini: ~$0.15/1M input, ~$0.60/1M output. Average ~$0.3/1M tokens
-    const estimatedCostUsd = (totalTokens / 1_000_000) * 0.3
-    const estimatedCostIls = estimatedCostUsd * 3.7
+        // AI cost estimation
+        const tokenUsage = await prisma.conversation.aggregate({
+            _sum: { tokensUsed: true },
+        }).catch(e => { console.error('Error tokenUsage aggregate:', e); return { _sum: { tokensUsed: 0 } } })
+
+        const totalTokensVal = tokenUsage?._sum?.tokensUsed || 0
+        const estimatedCostUsd = (totalTokensVal / 1_000_000) * 0.3
+        const estimatedCostIlsVal = estimatedCostUsd * 3.7
+
+        stats = {
+            totalUsers: totalUsersCount,
+            activeUsers: activeUsersCount,
+            frozenUsers: frozenUsersCount,
+            blockedUsers: blockedUsersCount,
+            totalBots: totalBotsCount,
+            activeBots: activeBotsCount,
+            totalConversations: totalConversationsCount,
+            totalMessages: totalMessagesCount,
+            totalLeads: totalLeadsCount,
+            totalCredits: creditsData?._sum?.balance || 0,
+            monthlyRevenue: revenueData?._sum?.monthlyPayment || 0,
+            totalTokens: totalTokensVal,
+            estimatedCostIls: estimatedCostIlsVal,
+            recentUsers: recentUsersList,
+            broadcasts: broadcastsList
+        }
+    } catch (error) {
+        console.error('CRITICAL Error in AdminDashboard:', error)
+    }
+
+    const {
+        totalUsers, activeUsers, frozenUsers, blockedUsers,
+        totalBots, activeBots, totalConversations, totalMessages,
+        totalLeads, totalCredits, monthlyRevenue,
+        totalTokens, estimatedCostIls,
+        recentUsers, broadcasts
+    } = stats
 
     return (
         <div className="space-y-6">

@@ -5,65 +5,68 @@ import { Users, Bot, MessageSquare, CreditCard, Search, ArrowLeft, Zap, DollarSi
 export const dynamic = 'force-dynamic'
 
 export default async function AdminCustomersPage() {
-
-    // Get all users with their stats
-    const users = await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            creditBalance: true,
-            bots: {
-                select: {
-                    id: true,
-                    _count: {
-                        select: {
-                            conversations: true,
+    let usersWithStats: any[] = []
+    try {
+        // Get all users with their stats
+        const users = await prisma.user.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                creditBalance: true,
+                bots: {
+                    select: {
+                        id: true,
+                        _count: {
+                            select: {
+                                conversations: true,
+                            }
                         }
                     }
+                },
+                _count: {
+                    select: {
+                        bots: true,
+                    }
                 }
-            },
-            _count: {
-                select: {
-                    bots: true,
-                }
-            }
-        }
-    })
-
-    // Calculate total conversations and usage for each user
-    const usersWithStats = await Promise.all(users.map(async (user) => {
-        // Aggregate tokens and credits used across all bots
-        const usageStats = await prisma.conversation.aggregate({
-            where: {
-                bot: { userId: user.id }
-            },
-            _sum: {
-                tokensUsed: true,
-                creditsUsed: true,
-            },
-            _count: {
-                id: true
             }
         })
 
-        const totalConversations = usageStats._count.id
-        const totalTokens = usageStats._sum.tokensUsed || 0
-        const totalCreditsUsed = usageStats._sum.creditsUsed || 0
+        // Calculate total conversations and usage for each user
+        usersWithStats = await Promise.all(users.map(async (user) => {
+            // Aggregate tokens and credits used across all bots
+            const usageStats = await prisma.conversation.aggregate({
+                where: {
+                    bot: { userId: user.id }
+                },
+                _sum: {
+                    tokensUsed: true,
+                    creditsUsed: true,
+                },
+                _count: {
+                    id: true
+                }
+            }).catch(() => ({ _sum: { tokensUsed: 0, creditsUsed: 0 }, _count: { id: 0 } }))
 
-        // Estimated cost (rough approximation: $0.00015 per 1k tokens for gpt-4o-mini is $0.15/1M, but let's use a safer higher average for mixed usage)
-        // Let's say $0.5 per 1M tokens as a very rough average for input/output/summaries
-        const estimatedCostUsd = (totalTokens / 1000000) * 0.5
-        const estimatedCostIls = estimatedCostUsd * 3.7 // 3.7 NIS per USD
+            const totalConversations = usageStats._count?.id || 0
+            const totalTokens = usageStats._sum?.tokensUsed || 0
+            const totalCreditsUsed = usageStats._sum?.creditsUsed || 0
 
-        return {
-            ...user,
-            stats: {
-                totalConversations,
-                totalTokens,
-                totalCreditsUsed,
-                estimatedCostIls
+            // Estimated cost
+            const estimatedCostUsd = (totalTokens / 1000000) * 0.5
+            const estimatedCostIls = estimatedCostUsd * 3.7 // 3.7 NIS per USD
+
+            return {
+                ...user,
+                stats: {
+                    totalConversations,
+                    totalTokens,
+                    totalCreditsUsed,
+                    estimatedCostIls
+                }
             }
-        }
-    }))
+        }))
+    } catch (error) {
+        console.error('Error fetching admin customers stats:', error)
+    }
 
     return (
         <div className="space-y-6">

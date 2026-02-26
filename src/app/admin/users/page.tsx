@@ -3,15 +3,20 @@ import Link from 'next/link'
 import { Users, Search, MoreVertical, Bot, CreditCard, Ban, CheckCircle } from 'lucide-react'
 
 export default async function AdminUsersPage() {
-    const users = await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            creditBalance: true,
-            _count: {
-                select: { bots: true, creditHistory: true },
+    let users: any[] = []
+    try {
+        users = await prisma.user.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                creditBalance: true,
+                _count: {
+                    select: { bots: true, creditHistory: true },
+                },
             },
-        },
-    })
+        })
+    } catch (error) {
+        console.error('Error fetching admin users:', error)
+    }
 
     return (
         <div className="space-y-6">
@@ -53,8 +58,8 @@ export default async function AdminUsersPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${user.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                                                user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-red-500/20 text-red-400'
+                                            user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-red-500/20 text-red-400'
                                             }`}>
                                             {user.status === 'active' ? <CheckCircle size={12} /> : <Ban size={12} />}
                                             {user.status === 'active' ? 'פעיל' :
