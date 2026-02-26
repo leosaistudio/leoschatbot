@@ -1,16 +1,10 @@
 import { prisma } from '@/lib/db'
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Users, Bot, MessageSquare, CreditCard, Search, ArrowLeft, Zap, DollarSign } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminCustomersPage() {
-    const session = await auth()
-    if (!session?.user || session.user.role !== 'admin') {
-        redirect('/dashboard')
-    }
 
     // Get all users with their stats
     const users = await prisma.user.findMany({
@@ -118,8 +112,8 @@ export default async function AdminCustomersPage() {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-2 py-1 rounded-md text-xs font-medium uppercase ${user.plan === 'pro' ? 'bg-purple-500/20 text-purple-400' :
-                                                user.plan === 'premium' ? 'bg-amber-500/20 text-amber-400' :
-                                                    'bg-slate-500/20 text-slate-400'
+                                            user.plan === 'premium' ? 'bg-amber-500/20 text-amber-400' :
+                                                'bg-slate-500/20 text-slate-400'
                                             }`}>
                                             {user.plan}
                                         </span>
